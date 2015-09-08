@@ -1,0 +1,11 @@
+*.iml
+*.ipr
+*.iws
+.idea/
+target/*
+/.settings
+/target
+/pif-api-demo
+logs/
+atlassian-ide-plugin.xml
+
