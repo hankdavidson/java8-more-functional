@@ -12,12 +12,17 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Stream;
+
+/**
+ * A {@link Collector} that writes {@link Stream} contents to a file
+ */
 
 public class FileCollector implements Collector<String, BufferedWriter, Path> {
     Path path;
-    OutputStream out;
-    OutputStreamWriter osWriter;
-    BufferedWriter writer;
+    OutputStream out = null;
+    OutputStreamWriter osWriter = null;
+    BufferedWriter writer = null;
 
     public FileCollector(Path path, Charset cs, OpenOption... options) {
         try {
@@ -57,8 +62,8 @@ public class FileCollector implements Collector<String, BufferedWriter, Path> {
     public Function<BufferedWriter, Path> finisher() {
         return bw -> {
             //noinspection EmptyTryBlock
-            try (BufferedWriter writer = bw) {
-                // nothing to do...using try-with-resources to make sure everything gets closed
+            try {
+                bw.close();
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             } finally {

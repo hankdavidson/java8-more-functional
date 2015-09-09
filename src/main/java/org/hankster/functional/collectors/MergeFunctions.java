@@ -3,7 +3,11 @@ package org.hankster.functional.collectors;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.stream.Collector;
 
+/**
+ * {@link BinaryOperator}s used for dealing with duplicate values in some {@link Collector}s
+ */
 public interface MergeFunctions {
 
     static <V> BinaryOperator<V> alwaysThrow(){
