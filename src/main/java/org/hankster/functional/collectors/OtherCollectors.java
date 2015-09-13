@@ -6,7 +6,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -14,6 +20,7 @@ import java.util.stream.Stream;
  * files and to Streams.
  */
 public interface OtherCollectors {
+
     /**
      * Returns a Stream with the results of the upstream.
      * Buffering to an {@link ArrayList} of default size is slower than this because of reallocs.  This uses a {@link Stream.Builder} to
@@ -35,12 +42,26 @@ public interface OtherCollectors {
                 Stream.Builder::build);                                     // Finisher converts Stream.Builder to a Stream
     }
 
+    /**
+     * Convenient wrapper for {@link FileCollector}, that writes each string element to the specified file as lines}.
+     * The encoding it uses to write is UTF-8. The file is closed upon completion.
+     * @param dest file to write
+     * @param options options for opening the file
+     * @throws UncheckedIOException that wraps any {@link IOException} thrown during file operations.
+     * @return a collector that collects Strings to the specified file
+     */
     static Collector<String, BufferedWriter, Path> toFile(Path dest, OpenOption...options){
         return new FileCollector(dest, StandardCharsets.UTF_8, options);
     }
 
-    static Collector<String, BufferedWriter, Path> toFile(Path dest, Charset cs, OpenOption...options){
-        return new FileCollector(dest, cs, options);
+    /**
+     * A collector that pours the upstream results into a single collection that you specify.
+     * @param existingCollection the collection to put results into
+     * @param <T> the type of items in the stream and resulting collection
+     * @param <C> the collection type
+     * @return a collector that pours results into a collection you specify
+     */
+    static<T, C extends Collection<T>> Collector<T,?,C> toExisting(C existingCollection){
+        return Collector.of(()->existingCollection, Collection::add, (a,b)->a, Collector.Characteristics.IDENTITY_FINISH, Collector.Characteristics.UNORDERED);
     }
-
 }

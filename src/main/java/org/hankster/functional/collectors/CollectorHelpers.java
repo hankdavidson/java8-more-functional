@@ -21,8 +21,8 @@ public interface CollectorHelpers {
      * low-level alternative to {@link Collectors#toCollection(Supplier)} that allows you to specify the collector's {@link Characteristics}.
      * {@link Collectors#toCollection(Supplier)} specifies the characteristics {@link Characteristics#IDENTITY_FINISH} and {@link Characteristics#UNORDERED} which are not ideal for
      * some collection types.  This allows specific {@link Characteristics} to be selected.
-     * @param factory a no-arg function that returns instances of the collection to put results into. For example, passing
-     *                in {@code HashSet::new} will call {@link HashSet}'s no-arg constructor.  May be called more
+     * @param factory a no-arg function that returns instances of the collection to put results into, e.g. {@code }HashBiMap::create}.
+     *                For example, passing in {@code HashSet::new} will call {@link HashSet}'s no-arg constructor.  May be called more
      *                than once, but it is not required to return a different instance every time.
      * @param characteristics zero or more collection characteristics that can affect performance in some situations
      * @param <T> The type of elements in the collection
@@ -30,7 +30,7 @@ public interface CollectorHelpers {
      * @return A {@link Collection} of type C containing elements of type T.
      */
     static<T, C extends Collection<T>> Collector<T,?,C> toCollection(Supplier<C> factory, Characteristics... characteristics){
-        return of(
+        return Collector.of(
                 factory,
                 C::add,
                 (c1, c2) -> {

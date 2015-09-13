@@ -15,15 +15,24 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 /**
- * A {@link Collector} that writes {@link Stream} contents to a file
+ * A {@link Collector} that writes {@link Stream} contents to a file, closing it when the stream is exhausted.
  */
 
-public class FileCollector implements Collector<String, BufferedWriter, Path> {
+public class FileCollector implements Collector<String, BufferedWriter, Path>, Closeable{
     Path path;
     OutputStream out = null;
     OutputStreamWriter osWriter = null;
     BufferedWriter writer = null;
 
+    /**
+     * Creates a Collector that takes the upstream strings and writes the strings as lines to the specified file.  The
+     * file is closed upon completion.  If it does not complete, (if, for instance, a RuntimeException is thrown),
+     * you will have to call close() on the collector.  The file is created even if the upstream is empty
+     * @param path the file to write to
+     * @param cs the character set to use
+     * @param options 0 or more OpenOption values
+     * @throws UncheckedIOException if an IOException is thrown while opening or writing to the file.
+     */
     public FileCollector(Path path, Charset cs, OpenOption... options) {
         try {
             this.path = path;
@@ -61,15 +70,10 @@ public class FileCollector implements Collector<String, BufferedWriter, Path> {
     @Override
     public Function<BufferedWriter, Path> finisher() {
         return bw -> {
-            //noinspection EmptyTryBlock
             try {
-                bw.close();
+                close();
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
-            } finally {
-                this.writer = null;
-                this.osWriter = null;
-                this.out = null;
             }
             return path;
         };
@@ -80,31 +84,29 @@ public class FileCollector implements Collector<String, BufferedWriter, Path> {
         return EnumSet.noneOf(Characteristics.class);
     }
 
-    private void closeAndThrow(IOException e) {
-        if (writer != null) {
-            try {
-                writer.close();
-            } catch (IOException suppressed) {
-                e.addSuppressed(suppressed);
-            }
-            writer = null;
-        }
-        if (osWriter != null) {
-            try {
-                osWriter.close();
-            } catch (IOException suppressed) {
-                e.addSuppressed(suppressed);
-            }
+    @Override
+    public void close() throws IOException {
+        // use try-with-resources to assure that all get closed
+        try(
+                OutputStream outRef = out;
+                BufferedWriter writerRef = writer;
+                OutputStreamWriter osWriterRef = osWriter;
+        ){
+
+        } finally {
             osWriter = null;
-        }
-        if (out != null) {
-            try {
-                out.close();
-            } catch (IOException suppressed) {
-                e.addSuppressed(suppressed);
-            }
+            writer = null;
             out = null;
+        }
+    }
+
+    private void closeAndThrow(IOException e) {
+        try {
+            close();
+        } catch (IOException e2){
+            e.addSuppressed(e2);
         }
         throw new UncheckedIOException(e);
     }
+
 }

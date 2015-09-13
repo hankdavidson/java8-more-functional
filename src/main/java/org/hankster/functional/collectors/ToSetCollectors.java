@@ -1,6 +1,7 @@
 package org.hankster.functional.collectors;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.IntFunction;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -60,7 +61,7 @@ public interface ToSetCollectors {
      * @param <T> an enum type
      * @return a Set of enum values.
      */
-    static<T extends Enum<T>> Collector<T,?,Set<T>> toEnumSet(Class<T> enumClass){
+    static<T extends Enum<T>> Collector<T,?,EnumSet<T>> toEnumSet(Class<T> enumClass){
         return CollectorHelpers.toStableOrderCollection(() -> EnumSet.noneOf(enumClass));
     }
 
@@ -84,4 +85,5 @@ public interface ToSetCollectors {
     static<T> Collector<T,?,NavigableSet<T>> toSortedSet(Comparator<T> comparator){
         return CollectorHelpers.toStableOrderCollection(() -> new TreeSet<>(comparator));
     }
+
 }
